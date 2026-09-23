@@ -1,0 +1,6 @@
+# Keep the shipped artefacts byte-stable across platforms: the served bundle
+# must stay equal to the built source (`npm run check` compares them), and the
+# browser half is delivered as a plain script.
+* text=auto eol=lf
+*.png binary
+*.tgz binary

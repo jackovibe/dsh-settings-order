@@ -1,0 +1,29 @@
+# npm pack output, build scratch and local e2e runs
+*.tgz
+pack/
+node_modules/
+.npm-cache/
+npm-debug.log*
+
+# e2e screenshots are full-window captures of a live GUI and contain real
+# session titles — keep them local. docs/ carries the dialog-only crop that the
+# README embeds.
+shots/
+
+# verification artefacts from a local install/restart run
+verify-report.txt
+new-dsh-url.txt
+profile-backup-*/
+
+# Pushing a workflow needs the `workflow` token scope
+# (`gh auth refresh -s workflow`). Until then the file lives here, untracked,
+# exactly like jackovibe/dsh-codex-pin does it.
+.github/workflows/ci.yml
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# scratch DSH home used by the e2e harness (isolated settings/sessions)
+.scratch-home/

@@ -1,0 +1,12 @@
+# dsh-settings-order bundle patch: mount the Settings-navigation ordering
+# plugin.
+#
+# `name` is the package name, resolved through the profile's node_modules.
+# The host half registers the durable `settings-order` settings namespace; the
+# client half loads immediately (platform: web), reads that namespace through
+# the settings scope, and reorders the Settings dialog's navigation rows to
+# match — falling back to browser-local storage where the transport cannot
+# carry the namespace.
+- insert:
+    - id: settings-order
+      name: dsh-settings-order

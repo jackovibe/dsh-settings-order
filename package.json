@@ -1,0 +1,82 @@
+{
+  "name": "dsh-settings-order",
+  "version": "0.2.0",
+  "description": "Free ordering for the DeepSeek Harness Web Settings navigation: drag, Alt+Arrow or the footer's ↑/↓ controls reorder the Settings dialog's left column, persisted in a host settings namespace. 设置左列自由排序：拖动 / Alt+↑↓ / ↑↓ 按钮，宿主持久，跨浏览器生效。",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "src",
+    "scripts",
+    "e2e",
+    "test",
+    "docs",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jackovibe/dsh-settings-order.git"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "settings",
+    "settings-nav",
+    "order",
+    "reorder",
+    "drag-and-drop",
+    "sidebar",
+    "ui"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings"
+      ],
+      "immediately": true
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build-client.mjs",
+    "check": "node scripts/build-client.mjs --check",
+    "test": "node --test",
+    "e2e": "node e2e/settings-order-e2e.mjs",
+    "e2e:dom": "node e2e/preinstall-dom-check.mjs",
+    "pack:check": "npm pack --dry-run",
+    "prepack": "npm run check && npm test",
+    "prepublishOnly": "npm run pack:check"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-settings": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-alpha.1 <0.2.0",
+    "@deepseek-ai/schemastery": "^3.18.2",
+    "@deepseek-ai/dsh-client-ui-settings": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-alpha.1 <0.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-settings": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-settings": {
+      "optional": true
+    }
+  },
+  "license": "MIT"
+}
