@@ -1,6 +1,6 @@
 {
   "name": "dsh-settings-order",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Free ordering for the DeepSeek Harness Web Settings navigation: drag, Alt+Arrow or the footer's ↑/↓ controls reorder the Settings dialog's left column, persisted in a host settings namespace. 设置左列自由排序：拖动 / Alt+↑↓ / ↑↓ 按钮，宿主持久，跨浏览器生效。",
   "type": "module",
   "main": "./lib/index.js",

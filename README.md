@@ -60,11 +60,11 @@ so a plain `dsh plugin add` is enough.
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # pin a released version instead
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.0
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.1
 
 # or from a local checkout / tarball
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.0.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.1.tgz
 ```
 
 `dsh plugin add` records the dependency **and** appends it to

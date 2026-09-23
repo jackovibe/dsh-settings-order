@@ -55,11 +55,11 @@
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # 想钉住某个发布版
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.0
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.1
 
 # 或从本地目录 / 打包产物安装
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.0.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.1.tgz
 ```
 
 `dsh plugin add` 会同时登记依赖**并**把它追加进 `dsh.profile.bundles`，挂载就靠这个：

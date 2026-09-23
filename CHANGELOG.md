@@ -4,6 +4,68 @@ All notable changes to `dsh-settings-order` are documented here. The format
 loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project uses semantic versioning.
 
+## [0.2.1] — 2026-09-23
+
+Four interaction-layer defects: a rejected host write used to lose the gesture,
+a disposing plugin left live listeners behind, fast repeats inside the 50 ms sync
+window dropped moves, and label-fallback ids could reach the host namespace.
+
+### Fixed
+
+- **A rejected host write no longer rolls the rows back.** The write used to be
+  adopted by the browser-local copy and then silently overwritten by the host's
+  stale value once the 5-second echo window closed; the reorder simply vanished.
+  A failure now marks the order as `pendingLocal`, and `refresh()` refuses to
+  adopt any host value that does not match it — so the rejected write stays
+  effective (and the footer no longer claims a browser-local store the plugin
+  never reads back) until the host echoes the order it was actually given.
+- **Dispose now removes the navigation list's listeners and binding marker.**
+  `decorate()` bound six listeners (`dragstart` / `dragover` / `dragleave` /
+  `drop` / `dragend` / `keydown`) and set `data-dshso-bound` on the shell's
+  `_navList`, but the `ctx.effect` cleanup only removed the row markers. After a
+  plugin disable or reload the old closure kept handling drags and Alt+Arrow on
+  the same node — and could write through a dead scope. The list is now
+  remembered in `boundList` and fully unbound (listeners plus marker) on
+  dispose.
+- **Rapid `↑` / `↓` presses (or a held `Alt+Arrow`) no longer lose moves.** Both
+  keyboard paths computed the next order from the DOM order (`nav.ids`), which
+  only catches up 50 ms later when `sync()` reapplies the order. Any second press
+  inside that window read a stale list and re-applied its own arithmetic on top
+  of it — losing a move, or moving the wrong row. Both paths now shift relative
+  to the logical order (`desiredOrder(nav)`), which already contains the pending
+  gesture.
+- **Label-fallback ids are never persisted.** `cellId()` falls back to
+  `label:<text>` when a row's React fiber is unreadable — an identity that is
+  display-only: it is not a `settings.section` id, so writing it to the host
+  namespace poisoned the saved list (and the fallback text changes with the
+  language). `commit()` now refuses any list containing a `label:` id, and the
+  footer keeps saying `无法识别设置项` while such a row is present, so the
+  degradation is visible instead of silent — and it self-heals as soon as the
+  row becomes identifiable again.
+
+### Known issues
+
+Tracked for a later release; none of them loses data on their own:
+
+- `reset` is unreachable while the `slots` service is not available
+  (`naturalKnown` stays false), so the built-in order cannot be restored.
+- The `writeFailed` and `scopeUnbound` diagnoses are sticky: they only clear on
+  the next `commit()`, not when the host recovers by itself.
+- The 5-second echo window can still flicker against a host that echoes slower
+  than that (the row briefly returns, then re-applies the saved order).
+- A drop trusts the `dropAt` captured by the last `dragover`, so a drop after
+  the rows moved under the pointer can target a stale neighbor.
+- `Alt+Arrow` at the first/last row does not `preventDefault()`, so the shell's
+  own key handling still sees that key.
+- When `ctx.effect` is missing the plugin registers no cleanup at all (no
+  listeners, DOM markers or footer are removed).
+- A selector mismatch (a shell rename of `_navList` / `_navCell`) is still
+  silent: no rows means no footer, hence no diagnosis line.
+- A transient `getSnapshot()` failure flashes the list back to the last good
+  value before the next successful read.
+- `dragId` can outlive its row: if the drag source is removed mid-drag, the
+  stale id is only cleared by the next `dragend` / dispose.
+
 ## [0.2.0] — 2026-09-23
 
 Touch/remote support, visible degradation, and a test suite that pins the DSH
