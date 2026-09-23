@@ -46,21 +46,37 @@
 
 ## 安装
 
-插件通过自带的 bundle patch 挂载，profile 只需把它作为依赖列入
-`dsh.profile.bundles`——**不要**再在 profile 的 `cordis.patch.yml` 里写第二条
-`insert`（重复 loader id 会导致启动失败）。
+要求：装了 DSH 并带 Web GUI（已在 **0.1.6-alpha.2** 验证，0.1.5-rc.x 也能跑），
+有一个可安装的 profile（下面统一用 `web`）。安装时不需要任何构建——客户端 bundle
+是随包发布的成品。
 
 ```powershell
-# 从 GitHub 安装
+# 从 GitHub 安装（跟随 main）
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
+
+# 想钉住某个发布版
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.0
 
 # 或从本地目录 / 打包产物安装
 npm pack
 dsh plugin --profile web add .\dsh-settings-order-0.2.0.tgz
 ```
 
+`dsh plugin add` 会同时登记依赖**并**把它追加进 `dsh.profile.bundles`，挂载就靠这个：
+包里自带 bundle patch，所以**不要**再在 profile 的 `cordis.patch.yml` 里写第二条
+`insert`（重复 loader id 会导致启动失败）。
+
 然后**重启 `dsh web`**：宿主半在启动时注册设置命名空间，而 profile 的客户端 bundle
-是启动时快照后下发的，只刷新页面不够。
+是启动时快照后下发的，只刷新页面不够。打开**设置**——左列底部会出现 `↑` / `↓` 与一行
+提示，改过顺序后还会出现「恢复默认」。
+
+### 更新
+
+```powershell
+dsh plugin --profile web up dsh-settings-order   # 重新解析依赖
+```
+
+如果新版本改了客户端半（`lib/client.js`）就需要重启 `dsh web`；只改文档的版本不用。
 
 ## 用法
 

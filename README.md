@@ -50,22 +50,41 @@ DOM, no slot registrations, no model-visible input, no network.
 
 ## Install
 
-The plugin is mounted through its own bundle patch, so a profile only needs it
-as a dependency in `dsh.profile.bundles` — **never** add a second `insert` for
-it in the profile's `cordis.patch.yml` (a duplicate loader id breaks startup).
+Requirements: a DSH install with the Web GUI (verified on **0.1.6-alpha.2**, and
+it also runs on 0.1.5-rc.x) plus a profile to install into (`web` in the commands
+below). Nothing is built at install time — the client bundle ships ready to serve,
+so a plain `dsh plugin add` is enough.
 
 ```powershell
-# from GitHub (pnpm resolves the tag/branch)
+# from GitHub (tracks `main`)
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
+
+# pin a released version instead
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.0
 
 # or from a local checkout / tarball
 npm pack
 dsh plugin --profile web add .\dsh-settings-order-0.2.0.tgz
 ```
 
-Then restart `dsh web` — the host half registers the settings namespace at
-boot, and the profile's client bundles are served from a boot-time snapshot, so
-a page refresh alone is not enough.
+`dsh plugin add` records the dependency **and** appends it to
+`dsh.profile.bundles`, which is what mounts it — the package carries its own
+bundle patch, so **never** add a second `insert` for it in the profile's
+`cordis.patch.yml` (a duplicate loader id would break startup).
+
+Then restart `dsh web`: the host half registers the settings namespace at boot,
+and the profile's client bundles are served from a boot-time snapshot, so a page
+refresh alone is not enough. Open **设置 / Settings** — the navigation column now
+gains a footer with `↑` / `↓`, the hint line and (once you reorder) `恢复默认`.
+
+### Update
+
+```powershell
+dsh plugin --profile web up dsh-settings-order   # re-resolve the dependency
+```
+
+Restart `dsh web` when the new release changed the client half
+(`lib/client.js`); a docs-only release does not need it.
 
 ## Usage
 

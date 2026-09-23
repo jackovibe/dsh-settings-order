@@ -36,6 +36,9 @@ internals this plugin stands on.
   22 and 24, with no install step because both scripts use Node built-ins only.
   The READMEs carry the badge; `.gitignore`, `README.zh-CN.md` and this changelog
   came with it.
+- Tagged `v0.2.0` with a GitHub release, and both READMEs now document the
+  pinned install (`…dsh-settings-order#v0.2.0`), the requirements, what a
+  successful install looks like on screen, and how to update.
 
 ### Changed
 
