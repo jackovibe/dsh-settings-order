@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # No install step: `check` and `test` use Node built-ins only, so CI stays
+      # green even when the registry is unavailable. The host-contract block in
+      # test/contract.test.mjs skips itself when no DSH is installed, and the e2e
+      # suites need a live `dsh web` instance, so they run locally (see README →
+      # Verification).
+      - name: bundle is in sync with its source
+        run: npm run check
+      - name: static invariants and host contract
+        run: npm test

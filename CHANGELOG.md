@@ -31,9 +31,11 @@ internals this plugin stands on.
   mounts exactly one loader row, the browser half writes only `order` to the
   host and only its own two keys to `localStorage`, and the docs match the
   shipped version.
-- `.github/workflows/ci.yml` (kept out of git until the repository token carries
-  the `workflow` scope — see the note in the file), `.gitignore`,
-  `README.zh-CN.md`, and this changelog.
+- `.github/workflows/ci.yml` — GitHub Actions on every push and pull request:
+  `npm run check` (the served bundle is its own source) plus `npm test`, on Node
+  22 and 24, with no install step because both scripts use Node built-ins only.
+  The READMEs carry the badge; `.gitignore`, `README.zh-CN.md` and this changelog
+  came with it.
 
 ### Changed
 

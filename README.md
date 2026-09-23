@@ -1,5 +1,7 @@
 # dsh-settings-order
 
+[![ci](https://github.com/jackovibe/dsh-settings-order/actions/workflows/ci.yml/badge.svg)](https://github.com/jackovibe/dsh-settings-order/actions/workflows/ci.yml)
+
 **Free ordering for the Settings navigation in the DeepSeek Harness Web GUI.**
 Drag a page, press `Alt+↑`/`Alt+↓`, or use the footer's `↑`/`↓` controls — the
 order is stored on the host, so it survives restarts and follows you to every

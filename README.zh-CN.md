@@ -1,5 +1,7 @@
 # dsh-settings-order
 
+[![ci](https://github.com/jackovibe/dsh-settings-order/actions/workflows/ci.yml/badge.svg)](https://github.com/jackovibe/dsh-settings-order/actions/workflows/ci.yml)
+
 **让 DeepSeek Harness Web 的「设置」左列可以自由排序。**
 拖动某一行、按 `Alt+↑`/`Alt+↓`，或用页脚的 `↑`/`↓` 按钮移动当前页——顺序存在宿主，
 重启后仍在，凡是能访问宿主设置的浏览器都跟着变。
