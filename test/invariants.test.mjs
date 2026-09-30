@@ -101,8 +101,11 @@ test('the docs describe the version and the repository that ship here', () => {
   assert.ok(!/0\.1\.0/.test(readme) || pkg.version === '0.1.0', 'the README must not advertise a stale version')
 })
 
-test('optional settings peers admit DSH 0.1.7 prereleases and stable builds', () => {
+test('optional settings peers admit both the 0.1.7 and the 0.2.0 prerelease lines', () => {
   for (const name of ['@deepseek-ai/dsh-settings', '@deepseek-ai/dsh-client-ui-settings']) {
+    // a prerelease only matches a range that names its own tuple, so 0.1.7 and
+    // 0.2.0 each need their own comparator list entry
     assert.match(pkg.peerDependencies[name], />=0\.1\.7-rc\.1 <0\.2\.0/)
+    assert.match(pkg.peerDependencies[name], />=0\.2\.0-rc\.1 <0\.3\.0/)
   }
 })

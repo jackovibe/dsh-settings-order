@@ -1,6 +1,6 @@
 {
   "name": "dsh-settings-order",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Free ordering for the DeepSeek Harness Web Settings navigation: drag, Alt+Arrow or the footer's ↑/↓ controls reorder the Settings dialog's left column, persisted in the host profile configuration. 设置左列自由排序：拖动 / Alt+↑↓ / ↑↓ 按钮，写入宿主 profile，跨浏览器生效。",
   "type": "module",
   "main": "./lib/index.js",
@@ -66,9 +66,9 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
-    "@deepseek-ai/dsh-settings": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-alpha.1 <0.2.0 || >=0.1.7-rc.1 <0.2.0",
+    "@deepseek-ai/dsh-settings": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-alpha.1 <0.2.0 || >=0.1.7-rc.1 <0.2.0 || >=0.2.0-rc.1 <0.3.0",
     "@deepseek-ai/schemastery": "^3.18.2",
-    "@deepseek-ai/dsh-client-ui-settings": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-alpha.1 <0.2.0 || >=0.1.7-rc.1 <0.2.0"
+    "@deepseek-ai/dsh-client-ui-settings": ">=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0 || >=0.1.6-alpha.1 <0.2.0 || >=0.1.7-rc.1 <0.2.0 || >=0.2.0-rc.1 <0.3.0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh-settings": {

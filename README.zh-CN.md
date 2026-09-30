@@ -47,7 +47,8 @@
 ## 安装
 
 要求：装了 DSH 并带 Web GUI，且有一个可安装的 profile（下面统一用 `web`）。
-SettingsForms 的 schema-derived volatile `Config` API 已对照 **0.1.7-rc.1** 的源码和类型检查；
+SettingsForms 的 schema-derived volatile `Config` API 已对照 **0.1.7-rc.1** 的源码和类型，
+以及 DSH Desktop **0.2.0-rc.2** 内置的那套 harness 检查；
 仍提供旧版 `settings.register()` API 的宿主也保留兼容路径。安装时不需要构建——客户端 bundle
 是随包发布的成品。
 
@@ -56,11 +57,11 @@ SettingsForms 的 schema-derived volatile `Config` API 已对照 **0.1.7-rc.1** 
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # 想钉住某个发布版
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.2
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.3
 
 # 或从本地目录 / 打包产物安装
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.2.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.3.tgz
 ```
 
 `dsh plugin add` 会同时登记依赖**并**把它追加进 `dsh.profile.bundles`，挂载就靠这个：
@@ -175,10 +176,11 @@ dsh plugin --profile web remove dsh-settings-order
 
 ## 兼容性
 
-SettingsForms / volatile-Config API 已对照 DSH **0.1.7-rc.1** 的源码和类型检查；
-设置外壳标记与 slot 契约也由宿主契约测试覆盖。这不代表已在实时 GUI 中对 0.2.2
-完成端到端验证。找不到 DSH 安装时 `npm test` 会跳过宿主契约部分；把 `DSH_CORE_ROOT`
-指向 `@deepseek-ai` scope 目录即可校验指定构建。
+SettingsForms / volatile-Config API 已对照 DSH **0.1.7-rc.1** 的源码和类型，以及 DSH Desktop
+构建里 `resources/app.asar` 内 **0.2.0-rc.2** 的同一套接口（`configForms`、`set(field, value)`、
+快照状态、设置外壳标记都在）；设置外壳标记与 slot 契约也由宿主契约测试覆盖。
+这不代表已在实时 GUI 中对 0.2.3 完成端到端验证。找不到 DSH 安装时 `npm test` 会跳过宿主契约部分；
+把 `DSH_CORE_ROOT` 指向 `@deepseek-ai` scope 目录即可校验指定构建。
 
 ## 开发
 

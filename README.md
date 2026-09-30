@@ -51,8 +51,9 @@ DOM, no slot registrations, no model-visible input, no network.
 ## Install
 
 Requirements: a DSH install with the Web GUI and a profile to install into
-(`web` in the commands below). The schema-derived volatile `Config` / `SettingsForms`
-API is checked against **0.1.7-rc.1**; hosts that still expose the legacy
+(`web` in the commands below). The schema-derived volatile `Config` /
+`SettingsForms` API is checked against **0.1.7-rc.1** and against the harness the
+DSH Desktop **0.2.0-rc.2** build bundles; hosts that still expose the legacy
 `settings.register()` API are also supported. Nothing is built at install time —
 the client bundle ships ready to serve, so a plain `dsh plugin add` is enough.
 
@@ -61,11 +62,11 @@ the client bundle ships ready to serve, so a plain `dsh plugin add` is enough.
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # pin a released version instead
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.2
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.3
 
 # or from a local checkout / tarball
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.2.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.3.tgz
 ```
 
 `dsh plugin add` records the dependency **and** appends it to
@@ -202,11 +203,13 @@ watchdog.
 ## Compatibility
 
 The SettingsForms/volatile-Config API was checked against DSH **0.1.7-rc.1**
-source and types; the Settings-shell markup and slot contract are also covered by
-the installed-host contract test. This is not an end-to-end validation of 0.2.2
-in a live GUI. `npm test` skips the host contract block when no DSH install is
-found; point `DSH_CORE_ROOT` at the `@deepseek-ai` scope directory to check a
-specific build.
+source and types, and against the 0.2.0-rc.2 payload inside the DSH Desktop build
+(`resources/app.asar`), where the same `configForms` service, `set(field, value)`,
+snapshot statuses and Settings-shell markup are present. The Settings-shell
+markup and slot contract are also covered by the installed-host contract test.
+This is not an end-to-end validation of 0.2.3 in a live GUI. `npm test` skips the
+host contract block when no DSH install is found; point `DSH_CORE_ROOT` at the
+`@deepseek-ai` scope directory to check a specific build.
 
 ## Development
 

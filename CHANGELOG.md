@@ -4,6 +4,37 @@ All notable changes to `dsh-settings-order` are documented here. The format
 loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project uses semantic versioning.
 
+## [0.2.3] — 2026-09-30
+
+Declare support for the 0.2.0 line, which the DSH Desktop build already ships
+(0.2.0-rc.2 bundles the whole harness at that version), and record what was
+checked there.
+
+### Fixed
+
+- **The optional settings peers admit the 0.2.0 prerelease line.** The ranges
+  ended at `<0.2.0`, and a semver prerelease only matches a comparator naming its
+  own tuple — so `0.2.0-rc.2` satisfied neither `@deepseek-ai/dsh-settings` nor
+  `@deepseek-ai/dsh-client-ui-settings`, and a 0.2.0-rc host reported a peer
+  mismatch. Both now carry `|| >=0.2.0-rc.1 <0.3.0` alongside the 0.1.x lines.
+- The contract test asserts both prerelease lines, so dropping one fails loudly.
+
+### Verified
+
+- Read out of the DSH Desktop 0.2.0-rc.2 payload (`resources/app.asar`): the
+  settings domain still exports `SettingsForms` and `isVolatilePath` and still
+  has no `register()`, so the host half's volatile `Config` and its legacy guard
+  both stay correct; the browser-side `configForms` service still serves
+  `get(entryId)` with `set(field, value)`, `unset(field)` and the
+  `loading | ready | unavailable` snapshot status, so the client half's transport
+  is right; and the Settings shell still renders `_navList` / `_navCell` /
+  `_navLabel`, still keys rows by section id, and still reads
+  `ctx.slots.entries("settings.section")`, so the DOM layer stays valid.
+- 0.2.0 no longer ships `.d.ts` files in the published payload, which is why the
+  API had to be read from `lib/index.js` and `lib/client.js` rather than types.
+- Still no end-to-end GUI run: this machine has no playwright-core or matching
+  chromium, so `npm run e2e:dom` remains unexecuted here.
+
 ## [0.2.2] — 2026-09-25
 
 Fix host persistence for DSH 0.1.7-rc.1, whose settings domain derives editable
