@@ -6,7 +6,7 @@
  * representative contexts, and asserts the real behaviour against the real
  * Settings dialog —
  *
- *   phase A (a remote browser: no `settingsScope`, no `slots` service)
+ *   phase A (a remote browser: no settings transport, no `slots` service)
  *     - rows are found by the CSS-module suffix selectors;
  *     - every row's identity is the section id React keyed it with;
  *     - the footer shows the ↑ / ↓ controls, the hint and the browser-local
@@ -15,13 +15,17 @@
  *       last row to the front, and both write the browser-local order;
  *     - a full page reload re-applies that stored order.
  *
- *   phase B (a host-backed browser: stubbed `settingsScope` + `slots`)
+ *   phase B (a host-backed browser: stubbed `configForms` + `slots`)
  *     - the ↑ / ↓ controls move the *active* page and the write reaches the
- *       host scope with the full id list;
+ *       host form with the full id list;
  *     - the reset action restores the shell's own order and clears the host
  *       value;
  *     - the browser-local note is gone, and the hint retires after the first
  *       reorder.
+ *
+ *   phase C (a legacy host: stubbed `settingsScope` instead)
+ *     - the retired namespace transport still reaches the host form, so the
+ *       pre-0.1.7 fallback keeps working.
  *
  * Usage: node e2e/preinstall-dom-check.mjs [port]
  */
@@ -105,9 +109,14 @@ function applyWithoutHost() {
   })
 }
 
-/** Phase B: a host-backed context with a stubbed settings scope and slot service. */
-function applyWithHost(naturalIds) {
-  return page.evaluate((ids) => {
+/**
+ * Phase B/C: a host-backed context with a stubbed settings transport and slot
+ * service. `transport` selects the DSH generation being simulated:
+ * `configForms` is 0.1.7+ (`get(entryId)`), `settingsScope` is the legacy
+ * bindable registry.
+ */
+function applyWithHost(naturalIds, transport = 'configForms') {
+  return page.evaluate(({ ids, transport }) => {
     window.localStorage.removeItem('dsh.settings-order.nav')
     window.localStorage.removeItem('dsh.settings-order.hint-seen')
     const host = { order: [], listeners: new Set() }
@@ -119,7 +128,7 @@ function applyWithHost(naturalIds) {
           host.order = value.slice()
           for (const listener of host.listeners) listener()
         }
-        return Promise.resolve()
+        return Promise.resolve(true)
       },
       subscribe: (listener) => {
         host.listeners.add(listener)
@@ -133,10 +142,17 @@ function applyWithHost(naturalIds) {
     }
     window.__dshsoExports.apply({
       logger: console,
-      get: (name) => (name === 'settingsScope' ? { bind: () => scope } : name === 'slots' ? slots : undefined),
+      get: (name) => {
+        if (name === 'configForms' && transport === 'configForms') {
+          return { get: (namespace) => (namespace === 'settings-order' ? scope : undefined) }
+        }
+        if (name === 'settingsScope' && transport === 'settingsScope') return { bind: () => scope }
+        if (name === 'slots') return slots
+        return undefined
+      },
     })
     return true
-  }, naturalIds)
+  }, { ids: naturalIds, transport })
 }
 
 /**
@@ -366,6 +382,34 @@ try {
   if (!report.steps.resetRestoredNatural) throw new Error('reset did not restore the shell order')
   if (JSON.stringify(report.steps.hostAfterReset) !== '[]') throw new Error('reset did not clear the host value')
   report.steps.resetHiddenAgain = afterReset.foot?.resetHidden === true
+  //#endregion
+
+  //#region phase C — the legacy settingsScope transport (pre-0.1.7 hosts)
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await injectPlugin()
+  await applyWithHost(naturalIds, 'settingsScope')
+  await openSettings()
+  const legacyStart = await readNavRows()
+  report.steps.legacyTransportNote = legacyStart.foot?.note ?? null
+  if ((legacyStart.foot?.note ?? '') !== '') {
+    throw new Error('the legacy settingsScope transport must not fall back to browser-local storage')
+  }
+  const legacySelected = legacyStart.rows[1]
+  await page.locator('[class*="_navCell"]').nth(1).click()
+  await page.waitForTimeout(500)
+  await page.locator('[data-dshso="down"]').click()
+  await page.waitForTimeout(900)
+  const afterLegacyDown = await readNavRows()
+  const legacyIds = afterLegacyDown.rows.map((row) => row.id)
+  report.steps.afterLegacyDown = legacyIds
+  report.steps.legacyHostAfterDown = await hostOrder()
+  report.steps.legacyDownMovedActive = legacyIds[2] === legacySelected.id
+  if (!report.steps.legacyDownMovedActive) {
+    throw new Error('the \u2193 control did not move the active page on the legacy settingsScope transport')
+  }
+  if (JSON.stringify(report.steps.legacyHostAfterDown) !== JSON.stringify(legacyIds)) {
+    throw new Error('the legacy settingsScope transport did not reach the host scope: ' + JSON.stringify(report.steps.legacyHostAfterDown))
+  }
   //#endregion
 
   await page.evaluate(() => {
