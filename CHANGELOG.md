@@ -4,6 +4,34 @@ All notable changes to `dsh-settings-order` are documented here. The format
 loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project uses semantic versioning.
 
+## [0.2.4] — 2026-09-30
+
+Documentation only — no code change. Records how to install into a DSH Desktop
+profile and promotes the 0.2.0-rc.2 note from "API checked" to "verified end to
+end".
+
+### Added
+
+- **A `DSH Desktop` install section in both READMEs.** The Desktop build carries
+  its own harness and its own `desktop` profile, so the npm-installed `dsh`
+  cannot install into it — it boots a different harness and refuses even to read
+  that profile (`error: profile "desktop" is managed exclusively by the Electron
+  application`). The section documents the app's own CLI
+  (`<install>\resources\runtime\cli\bin\dsh.cmd`), why it must be that one (the
+  Desktop profile's lockfile is the app's to write, under its bundled pnpm), and
+  that the app has to be restarted because the host half registers at boot and
+  the client bundles come from a boot-time snapshot.
+
+### Changed
+
+- The compatibility notes now state the end-to-end result instead of an open
+  question: on **DSH Desktop 0.2.0-rc.2** the navigation footer renders and a
+  reorder is persisted into `~/.dsh/profiles/desktop/cordis.patch.yml` under
+  `settings-order.config.order` — the path a rejected or missing transport could
+  never produce, since it would have stayed on browser-local storage.
+- Both READMEs also say plainly that the DOM-layer `npm run e2e:dom` harness is
+  not part of CI (it needs playwright-core and a matching chromium).
+
 ## [0.2.3] — 2026-09-30
 
 Declare support for the 0.2.0 line, which the DSH Desktop build already ships

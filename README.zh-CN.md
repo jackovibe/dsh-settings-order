@@ -57,11 +57,11 @@ SettingsForms 的 schema-derived volatile `Config` API 已对照 **0.1.7-rc.1** 
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # 想钉住某个发布版
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.3
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.4
 
 # 或从本地目录 / 打包产物安装
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.3.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.4.tgz
 ```
 
 `dsh plugin add` 会同时登记依赖**并**把它追加进 `dsh.profile.bundles`，挂载就靠这个：
@@ -71,6 +71,23 @@ dsh plugin --profile web add .\dsh-settings-order-0.2.3.tgz
 然后**重启 `dsh web`**：宿主半通过插件 `Config` schema 暴露可编辑字段，而 profile 的客户端 bundle
 是启动时快照后下发的，只刷新页面不够。打开**设置**——左列底部会出现 `↑` / `↓` 与一行
 提示，改过顺序后还会出现「恢复默认」。
+
+### DSH Desktop（桌面版）
+
+桌面版自带一套 harness（0.2.0-rc.2 把全部 `@deepseek-ai/dsh-*` 都锁在该版本）和它自己的
+`desktop` profile，所以要装进**那个** profile，并且要用桌面版自带的 CLI——npm 装的 `dsh`
+启动的是另一套 harness，连读桌面 profile 都会被拒
+（`error: profile "desktop" is managed exclusively by the Electron application`）：
+
+```powershell
+& "$env:LOCALAPPDATA\..\..\DSH Desktop\resources\runtime\cli\bin\dsh.cmd" `
+  plugin --profile desktop add github:jackovibe/dsh-settings-order#v0.2.4
+```
+
+路径按你的桌面版安装位置调整（本机是 `D:\DSH Desktop\…`）。这条命令走桌面版自带的 pnpm，
+这点重要：桌面 profile 的 lockfile 归应用自己写。装完**必须重启桌面应用**——宿主半在启动时
+注册、客户端 bundle 也是启动快照下发的，重启后左列底部才会出现页脚。之后改顺序会落到
+`~/.dsh/profiles/desktop/cordis.patch.yml` 的 `settings-order.config.order`，与 Web profile 一致。
 
 ### 更新
 
@@ -178,9 +195,11 @@ dsh plugin --profile web remove dsh-settings-order
 
 SettingsForms / volatile-Config API 已对照 DSH **0.1.7-rc.1** 的源码和类型，以及 DSH Desktop
 构建里 `resources/app.asar` 内 **0.2.0-rc.2** 的同一套接口（`configForms`、`set(field, value)`、
-快照状态、设置外壳标记都在）；设置外壳标记与 slot 契约也由宿主契约测试覆盖。
-这不代表已在实时 GUI 中对 0.2.3 完成端到端验证。找不到 DSH 安装时 `npm test` 会跳过宿主契约部分；
-把 `DSH_CORE_ROOT` 指向 `@deepseek-ai` scope 目录即可校验指定构建。
+快照状态、设置外壳标记都在）；并且已在 **DSH Desktop 0.2.0-rc.2 上端到端验证**：设置左列页脚
+正常出现，拖动后的顺序落到了 `~/.dsh/profiles/desktop/cordis.patch.yml` 的
+`settings-order.config.order`。设置外壳标记与 slot 契约另由宿主契约测试覆盖；仓库 CI 不跑
+浏览器 DOM 层的 `npm run e2e:dom`（需要 playwright-core 与配套 chromium）。找不到 DSH 安装时
+`npm test` 会跳过宿主契约部分；把 `DSH_CORE_ROOT` 指向 `@deepseek-ai` scope 目录即可校验指定构建。
 
 ## 开发
 

@@ -62,11 +62,11 @@ the client bundle ships ready to serve, so a plain `dsh plugin add` is enough.
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # pin a released version instead
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.3
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.4
 
 # or from a local checkout / tarball
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.3.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.4.tgz
 ```
 
 `dsh plugin add` records the dependency **and** appends it to
@@ -78,6 +78,27 @@ Then restart `dsh web`: the host half exposes its volatile Config through the
 schema-derived settings service, and the profile's client bundles are served
 from a boot-time snapshot, so a page refresh alone is not enough. Open **设置 / Settings** — the navigation column now
 gains a footer with `↑` / `↓`, the hint line and (once you reorder) `恢复默认`.
+
+### DSH Desktop
+
+The Desktop build carries its own harness (0.2.0-rc.2 bundles the whole
+`@deepseek-ai/dsh-*` set at that version) and its own `desktop` profile, so
+install into **that** profile with the CLI the app ships — the npm-installed
+`dsh` boots a different harness and cannot even dump the Desktop profile
+(`error: profile "desktop" is managed exclusively by the Electron application`):
+
+```powershell
+& "$env:LOCALAPPDATA\..\..\DSH Desktop\resources\runtime\cli\bin\dsh.cmd" `
+  plugin --profile desktop add github:jackovibe/dsh-settings-order#v0.2.4
+```
+
+Adjust the path to wherever the Desktop build is installed (this machine:
+`D:\DSH Desktop\…`). The command installs under the app's own pnpm, which matters
+because the Desktop profile's lockfile is the app's to write. Then **restart the
+app**: the host half registers at boot and the client bundles are served from a
+boot-time snapshot, so the footer appears only after the restart. An ordering
+change then lands in `~/.dsh/profiles/desktop/cordis.patch.yml` under
+`settings-order.config.order`, exactly as in the Web profile.
 
 ### Update
 
@@ -205,10 +226,14 @@ watchdog.
 The SettingsForms/volatile-Config API was checked against DSH **0.1.7-rc.1**
 source and types, and against the 0.2.0-rc.2 payload inside the DSH Desktop build
 (`resources/app.asar`), where the same `configForms` service, `set(field, value)`,
-snapshot statuses and Settings-shell markup are present. The Settings-shell
-markup and slot contract are also covered by the installed-host contract test.
-This is not an end-to-end validation of 0.2.3 in a live GUI. `npm test` skips the
-host contract block when no DSH install is found; point `DSH_CORE_ROOT` at the
+snapshot statuses and Settings-shell markup are present. It was then verified
+**end to end on DSH Desktop 0.2.0-rc.2**: the navigation footer renders, and a
+reorder is persisted into `~/.dsh/profiles/desktop/cordis.patch.yml` under
+`settings-order.config.order`. The Settings-shell markup and slot contract are
+also covered by the installed-host contract test. The browser-DOM layer's own
+`npm run e2e:dom` harness is not run in this repository's CI (it needs
+playwright-core and a matching chromium). `npm test` skips the host contract
+block when no DSH install is found; point `DSH_CORE_ROOT` at the
 `@deepseek-ai` scope directory to check a specific build.
 
 ## Development
