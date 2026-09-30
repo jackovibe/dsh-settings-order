@@ -40,7 +40,7 @@ already rendered, and remembers the result.
 | **Keyboard** | focus a row and press `Alt+↑` / `Alt+↓` |
 | **Footer controls** | `↑` / `↓` move the page you are currently viewing one place — the touch-friendly path, since a phone browser has no mouse drag and no `Alt` key |
 | **Reset** | once your order differs from the built-in one, a `恢复默认` / `Reset` action returns it |
-| **Host-persisted** | the list lives in `~/.dsh/settings.yaml` under `settings-order.order`, shared by every browser that can reach host settings |
+| **Host-persisted** | DSH 0.1.7-rc.1 (and compatible stable builds) stores the list in the active profile's `cordis.patch.yml`, under the `settings-order` entry's `config.order`; every browser that reaches that host shares it |
 | **Browser-local fallback** | a browser the transport cannot reach (some remote setups) keeps its own `localStorage` copy and says so in the footer |
 | **Fail-soft** | if a future DSH build changes the markup, the plugin changes nothing and shows `无法识别设置项` in the footer instead of failing silently |
 | **Non-destructive** | third-party pages (`archived-sessions`, `market`, `cost-meter`, …) reorder exactly like built-ins; a page added later keeps the position the shell gives it; ids that no longer exist are ignored |
@@ -50,21 +50,22 @@ DOM, no slot registrations, no model-visible input, no network.
 
 ## Install
 
-Requirements: a DSH install with the Web GUI (verified on **0.1.6-alpha.2**, and
-it also runs on 0.1.5-rc.x) plus a profile to install into (`web` in the commands
-below). Nothing is built at install time — the client bundle ships ready to serve,
-so a plain `dsh plugin add` is enough.
+Requirements: a DSH install with the Web GUI and a profile to install into
+(`web` in the commands below). The schema-derived volatile `Config` / `SettingsForms`
+API is checked against **0.1.7-rc.1**; hosts that still expose the legacy
+`settings.register()` API are also supported. Nothing is built at install time —
+the client bundle ships ready to serve, so a plain `dsh plugin add` is enough.
 
 ```powershell
 # from GitHub (tracks `main`)
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # pin a released version instead
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.1
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.2
 
 # or from a local checkout / tarball
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.1.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.2.tgz
 ```
 
 `dsh plugin add` records the dependency **and** appends it to
@@ -72,9 +73,9 @@ dsh plugin --profile web add .\dsh-settings-order-0.2.1.tgz
 bundle patch, so **never** add a second `insert` for it in the profile's
 `cordis.patch.yml` (a duplicate loader id would break startup).
 
-Then restart `dsh web`: the host half registers the settings namespace at boot,
-and the profile's client bundles are served from a boot-time snapshot, so a page
-refresh alone is not enough. Open **设置 / Settings** — the navigation column now
+Then restart `dsh web`: the host half exposes its volatile Config through the
+schema-derived settings service, and the profile's client bundles are served
+from a boot-time snapshot, so a page refresh alone is not enough. Open **设置 / Settings** — the navigation column now
 gains a footer with `↑` / `↓`, the hint line and (once you reorder) `恢复默认`.
 
 ### Update
@@ -97,15 +98,24 @@ Restart `dsh web` when the new release changed the client half
 
 ## Storage
 
-`~/.dsh/settings.yaml`:
+For DSH 0.1.7-rc.1's schema-derived settings API, the order is saved in the
+active profile's `cordis.patch.yml` as the loader entry's config:
 
 ```yaml
-settings-order:
-  order:
-    - general
-    - archived-sessions
-    - plugins
+- id: settings-order
+  config:
+    order:
+      - general
+      - archived-sessions
+      - plugins
 ```
+
+The exact file is the active profile patch (available as `settings.documentPath`),
+not the removed `~/.dsh/settings.yaml`. The browser half reaches that document
+through the settings domain's `configForms` service
+(`ctx.configForms.get('settings-order')`), which DSH 0.1.7 introduced; on older
+hosts it falls back to the legacy `settingsScope` namespace `settings-order`,
+whose `order` field is stored by that host's settings provider.
 
 Browser-local fallback (`localStorage`): `dsh.settings-order.nav` (the ordered
 ids), `dsh.settings-order.hint-seen` (the hint flag).
@@ -156,10 +166,11 @@ in `~/.dsh/dsh-web.log`; the settings/workspace documents come from
 
 ### Verifying against an isolated home
 
-Prefer a scratch instance that owns its own home: the settings document is
-persisted by the instance that owns it, and a *second* instance sharing `~/.dsh`
-accepts the change in memory but does not rewrite `settings.yaml` (observed on
-0.1.6). Isolating the home also keeps your real settings out of the test.
+Prefer a scratch instance with its own profile patch: settings edits are written
+to the active profile's `cordis.patch.yml`. Isolating the home/profile also keeps
+your real configuration out of any test. This repository's e2e harnesses target
+an installed plugin and a live GUI; do not run them against a user's profile
+without an isolated environment.
 
 ```powershell
 $home2 = Join-Path (Get-Location) '.scratch-home'   # inside the repo, git-ignored
@@ -190,10 +201,12 @@ watchdog.
 
 ## Compatibility
 
-Verified against DSH **0.1.6-alpha.2** (and written for 0.1.5-rc.x, whose
-Settings shell has the same markup and slot contract). `npm test` skips the host
-contract block when no DSH install is found; point `DSH_CORE_ROOT` at the
-`@deepseek-ai` scope directory to check a specific build.
+The SettingsForms/volatile-Config API was checked against DSH **0.1.7-rc.1**
+source and types; the Settings-shell markup and slot contract are also covered by
+the installed-host contract test. This is not an end-to-end validation of 0.2.2
+in a live GUI. `npm test` skips the host contract block when no DSH install is
+found; point `DSH_CORE_ROOT` at the `@deepseek-ai` scope directory to check a
+specific build.
 
 ## Development
 

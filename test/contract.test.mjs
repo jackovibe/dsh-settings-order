@@ -17,14 +17,14 @@
  * no host is present the contract block skips with a note (set `DSH_CORE_ROOT`
  * to the `@deepseek-ai` scope directory).
  *
- * The final block imports the *installed* host half, so a change to the
- * settings-namespace contract fails here too.
+ * The final block pins the plugin's Config contract and, when an installed
+ * host is found, checks the schema-derived SettingsForms API it targets.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const read = (p) => readFileSync(join(root, p), 'utf8')
@@ -62,6 +62,20 @@ test('every internal dependency degrades visibly instead of silently', () => {
   assert.match(src, /writeFailed:/, 'a rejected host write needs a user-visible diagnosis')
   assert.match(src, /diagnosis/, 'diagnoses are rendered in the footer')
   assert.match(src, /local:/, 'the browser-local fallback must say so')
+})
+
+test('the browser half reaches host settings through configForms, with the legacy scope as fallback', () => {
+  assert.match(src, /serviceOf\('configForms'\)/, 'DSH 0.1.7 carries preferences through the configForms service')
+  assert.match(src, /forms\.get\(NAMESPACE\)/, 'the 0.1.7 form is addressed by the loader entry id')
+  assert.match(src, /serviceOf\('settingsScope'\)/, 'older hosts keep the legacy settings scope')
+  assert.match(src, /legacy\.bind\(\{ namespace: NAMESPACE \}\)/, 'the legacy transport binds by namespace')
+  assert.match(src, /typeof form\.set === 'function'/, 'an unusable form must fall through instead of throwing')
+})
+
+test('a Host refusal reported as a resolved false is not treated as a saved order', () => {
+  assert.match(src, /accepted === false/, 'the 0.1.7 form resolves false on a refused write')
+  assert.match(src, /function refuse\(list\)/, 'a refusal keeps the gesture effective and diagnoses itself')
+  assert.match(src, /diagnosis = T\.writeFailed/, 'a refusal must be visible in the footer')
 })
 
 test('all three interaction paths exist: drag, Alt+Arrow and the footer controls', () => {
@@ -114,6 +128,18 @@ if (core === null) {
   })
 } else {
   const shell = readFileSync(join(core, 'dsh-client-ui-settings-general', 'lib', 'client.js'), 'utf8')
+  const settingsTypesPath = join(core, 'dsh-settings', 'lib', 'types', 'index.d.ts')
+  const settingsTypes = existsSync(settingsTypesPath) ? readFileSync(settingsTypesPath, 'utf8') : ''
+
+  test('the installed host exposes schema-derived SettingsForms for plugin Config', (t) => {
+    if (!settingsTypes.includes('class SettingsForms extends Service')) {
+      t.skip('installed host predates schema-derived SettingsForms')
+      return
+    }
+    assert.match(settingsTypes, /describe\(options\?: SettingsDescribeOptions\): SettingsDescriptor\[\]/)
+    assert.match(settingsTypes, /update\(ns: string, patch: object/)
+    assert.ok(!settingsTypes.includes('register(ns:'), 'the removed namespace registration API must not be assumed')
+  })
 
   test('the Settings shell still renders the navigation with the suffixes we select on', () => {
     for (const suffix of ['_navList', '_navCell', '_navLabel']) {
@@ -150,40 +176,16 @@ if (core === null) {
   })
 }
 
-/** The installed copy of this plugin, whose node_modules can resolve schemastery. */
-function findInstalledHalf() {
-  const candidates = [
-    process.env.DSH_PROFILE ? join(process.env.DSH_PROFILE, 'node_modules', 'dsh-settings-order', 'lib', 'index.js') : undefined,
-    process.env.USERPROFILE
-      ? join(process.env.USERPROFILE, '.dsh', 'profiles', 'web', 'node_modules', 'dsh-settings-order', 'lib', 'index.js')
-      : undefined,
-    process.env.HOME
-      ? join(process.env.HOME, '.dsh', 'profiles', 'web', 'node_modules', 'dsh-settings-order', 'lib', 'index.js')
-      : undefined,
-  ].filter((p) => typeof p === 'string' && p.length > 0)
-  for (const candidate of candidates) if (existsSync(candidate)) return candidate
-  return null
-}
+const host = read('lib/index.js')
 
-const installed = findInstalledHalf()
+test('the host exports an editable volatile Config for schema-derived SettingsForms', () => {
+  assert.match(host, /export const name = 'settings-order'/)
+  assert.match(host, /export const Config = z\.object\(\{/)
+  assert.match(host, /order: z\.array\(z\.string\(\)\)\.default\(\[\]\)\.volatile\(\)/)
+})
 
-if (installed === null) {
-  test('installed host half', (t) => {
-    t.skip('dsh-settings-order is not installed in a profile — set DSH_PROFILE to check it')
-  })
-} else {
-  test('the installed host half registers the settings-order namespace', async () => {
-    const module = await import(pathToFileURL(installed).href)
-    assert.equal(module.name, 'settings-order')
-    assert.deepEqual(module.inject, ['settings'])
-    const calls = []
-    module.apply({ settings: { register: (namespace, schema, options) => calls.push({ namespace, schema, options }) } }, {})
-    assert.equal(calls.length, 1, 'exactly one namespace registration')
-    assert.equal(calls[0].namespace, 'settings-order')
-    assert.equal(calls[0].options.applies, 'live')
-    assert.deepEqual(calls[0].options.base, { order: [] })
-    assert.deepEqual(calls[0].schema({}), { order: [] }, 'an absent user layer resolves to an empty order')
-    assert.deepEqual(calls[0].schema({ order: ['plugins', 'general'] }), { order: ['plugins', 'general'] })
-  })
-}
+test('the host avoids the removed register API but preserves legacy compatibility', () => {
+  assert.match(host, /typeof settings\.register === 'function'/)
+  assert.match(host, /settings\.register\(name, Config/)
+})
 //#endregion

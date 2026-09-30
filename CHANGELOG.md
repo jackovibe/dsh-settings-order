@@ -4,6 +4,35 @@ All notable changes to `dsh-settings-order` are documented here. The format
 loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project uses semantic versioning.
 
+## [0.2.2] — 2026-09-25
+
+Fix host persistence for DSH 0.1.7-rc.1, whose settings domain derives editable
+fields from each loader plugin's `Config` schema (host side) and serves them to
+the browser through the `configForms` service — replacing both the removed
+`settings.register()` method and the retired `settingsScope` registry.
+
+### Fixed
+
+- Export the `settings-order` loader entry's `Config` with a volatile `order`
+  field. DSH 0.1.7-rc.1 can now surface and persist the preference in the active
+  profile's `cordis.patch.yml`; legacy hosts with `settings.register()` retain
+  their compatibility path.
+- Read and write that preference through `ctx.configForms.get('settings-order')`
+  instead of the retired `settingsScope` registry. Without this the browser half
+  found no transport, silently stayed on browser-local storage, and never reached
+  the host document. The legacy `settingsScope.bind({ namespace })` path is kept
+  for older hosts, and an unusable form falls through instead of throwing.
+- A write the Host refuses by resolving `false` (the 0.1.7 contract, where only
+  transport failures reject) is no longer treated as saved: the refusal keeps the
+  gesture effective for this browser and shows `保存失败，仅本浏览器生效`, exactly
+  like a rejected legacy write.
+- Extend optional peer ranges for `dsh-settings` and
+  `dsh-client-ui-settings` to admit the 0.1.7 prerelease line, including the
+  locally inspected 0.1.7-rc.1 package versions.
+- Correct both READMEs: the current profile patch, not `~/.dsh/settings.yaml`,
+  is the 0.1.7-rc.1 persistence location. Clarify that API compatibility was
+  checked against installed source/types, without claiming a live GUI e2e run.
+
 ## [0.2.1] — 2026-09-23
 
 Four interaction-layer defects: a rejected host write used to lose the gesture,

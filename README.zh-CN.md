@@ -37,7 +37,7 @@
 | **键盘** | 聚焦某行后按 `Alt+↑` / `Alt+↓` |
 | **页脚按钮** | `↑` / `↓` 把**当前正在看的那个设置页**上移/下移一位——手机上唯一的可行路径（手机浏览器没有鼠标拖拽也没有 Alt 键） |
 | **恢复默认** | 顺序一旦与内置顺序不同，页脚出现「恢复默认」 |
-| **宿主持久** | 列表存在 `~/.dsh/settings.yaml` 的 `settings-order.order`，所有能连到宿主设置的浏览器共用 |
+| **宿主持久** | DSH 0.1.7-rc.1（及兼容的稳定版）将列表写入当前 profile 的 `cordis.patch.yml`，位于 `settings-order` 条目的 `config.order`；所有能访问该宿主的浏览器共用 |
 | **浏览器本地兜底** | 连不上宿主设置的浏览器（部分远端场景）退化为自己的 `localStorage`，并在页脚注明 |
 | **失效可见** | 未来 DSH 若改了标记结构，插件什么都不做，并在页脚显示「无法识别设置项」，不会静默失效 |
 | **非破坏性** | 第三方页（`archived-sessions`、`market`、`cost-meter`…）与内置页一样可排；后来新增的页留在外壳给它的位置；已不存在的 id 自动忽略 |
@@ -46,8 +46,9 @@
 
 ## 安装
 
-要求：装了 DSH 并带 Web GUI（已在 **0.1.6-alpha.2** 验证，0.1.5-rc.x 也能跑），
-有一个可安装的 profile（下面统一用 `web`）。安装时不需要任何构建——客户端 bundle
+要求：装了 DSH 并带 Web GUI，且有一个可安装的 profile（下面统一用 `web`）。
+SettingsForms 的 schema-derived volatile `Config` API 已对照 **0.1.7-rc.1** 的源码和类型检查；
+仍提供旧版 `settings.register()` API 的宿主也保留兼容路径。安装时不需要构建——客户端 bundle
 是随包发布的成品。
 
 ```powershell
@@ -55,18 +56,18 @@
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # 想钉住某个发布版
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.1
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.2
 
 # 或从本地目录 / 打包产物安装
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.1.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.2.tgz
 ```
 
 `dsh plugin add` 会同时登记依赖**并**把它追加进 `dsh.profile.bundles`，挂载就靠这个：
 包里自带 bundle patch，所以**不要**再在 profile 的 `cordis.patch.yml` 里写第二条
 `insert`（重复 loader id 会导致启动失败）。
 
-然后**重启 `dsh web`**：宿主半在启动时注册设置命名空间，而 profile 的客户端 bundle
+然后**重启 `dsh web`**：宿主半通过插件 `Config` schema 暴露可编辑字段，而 profile 的客户端 bundle
 是启动时快照后下发的，只刷新页面不够。打开**设置**——左列底部会出现 `↑` / `↓` 与一行
 提示，改过顺序后还会出现「恢复默认」。
 
@@ -87,15 +88,22 @@ dsh plugin --profile web up dsh-settings-order   # 重新解析依赖
 
 ## 存储
 
-`~/.dsh/settings.yaml`：
+在 DSH 0.1.7-rc.1 的 schema-derived settings API 下，顺序写入当前 profile 的
+`cordis.patch.yml`，作为 loader 条目的配置：
 
 ```yaml
-settings-order:
-  order:
-    - general
-    - archived-sessions
-    - plugins
+- id: settings-order
+  config:
+    order:
+      - general
+      - archived-sessions
+      - plugins
 ```
+
+具体文件是当前 profile patch（可通过 `settings.documentPath` 查看），不是已移除的
+`~/.dsh/settings.yaml`。浏览器半通过设置域的 `configForms` 服务访问它
+（`ctx.configForms.get('settings-order')`，DSH 0.1.7 引入）；更旧的宿主回退到 legacy
+`settingsScope` 命名空间 `settings-order`，由其 settings provider 保存 `order`。
 
 浏览器本地兜底（`localStorage`）：`dsh.settings-order.nav`（有序 id 列表）、
 `dsh.settings-order.hint-seen`（提示是否已收起）。
@@ -136,9 +144,9 @@ settings/workspace 文档来自 `DSH_E2E_HOME`，否则用 `~/.dsh`。需要 `pl
 
 ### 用隔离的 home 验证
 
-建议另起一个**独占自己 home** 的临时实例：settings 文档由「拥有它」的那个实例持久化，
-而共享同一个 `~/.dsh` 的**第二个**实例只在内存里接受改动、不会重写 `settings.yaml`（0.1.6 实测）。
-隔离 home 同时也保证你的真实设置不被测试碰到。
+建议使用拥有独立 profile patch 的临时实例：设置会写入当前 profile 的
+`cordis.patch.yml`。隔离 home/profile 可避免测试触碰真实配置。当前仓库的 e2e
+脚本针对已安装插件与实时 GUI；没有隔离环境时，不要对用户 profile 运行。
 
 ```powershell
 $home2 = Join-Path (Get-Location) '.scratch-home'   # 放在仓库里，已被 git 忽略
@@ -167,9 +175,10 @@ dsh plugin --profile web remove dsh-settings-order
 
 ## 兼容性
 
-已在 DSH **0.1.6-alpha.2** 上验证（同时兼容 0.1.5-rc.x：设置外壳的标记与槽契约相同）。
-找不到 DSH 安装时 `npm test` 会跳过宿主机契约部分；把 `DSH_CORE_ROOT` 指向
-`@deepseek-ai` scope 目录即可校验指定构建。
+SettingsForms / volatile-Config API 已对照 DSH **0.1.7-rc.1** 的源码和类型检查；
+设置外壳标记与 slot 契约也由宿主契约测试覆盖。这不代表已在实时 GUI 中对 0.2.2
+完成端到端验证。找不到 DSH 安装时 `npm test` 会跳过宿主契约部分；把 `DSH_CORE_ROOT`
+指向 `@deepseek-ai` scope 目录即可校验指定构建。
 
 ## 开发
 
@@ -179,7 +188,7 @@ node scripts/build-client.mjs --check  # bundle 过期则失败
 node --test                            # 契约 + 不变量
 ```
 
-目录：`lib/index.js`（宿主半：设置命名空间）、`src/client-src.js`（浏览器半，纯脚本）、
+目录：`lib/index.js`（宿主半：Config schema）、`src/client-src.js`（浏览器半，纯脚本）、
 `lib/client.js`（下发的 bundle）、`cordis.patch.yml`（bundle patch）、
 `e2e/`、`test/`、`scripts/`、`docs/`。
 

@@ -55,12 +55,13 @@ test('the bundle patch mounts exactly one loader row', () => {
   assert.match(patch, /name:\s*dsh-settings-order/)
 })
 
-test('the host half registers only the settings-order namespace', () => {
+test('the host Config exposes only the volatile order preference to SettingsForms', () => {
   assert.match(host, /export const name = 'settings-order'/)
   assert.match(host, /export const inject = \['settings'\]/)
-  assert.match(host, /ctx\.settings\.register\('settings-order'/)
-  assert.match(host, /order: z\.array\(z\.string\(\)\)\.default\(\[\]\)/)
-  assert.match(host, /applies: 'live'/)
+  assert.match(host, /export const Config = z\.object\(\{/)
+  assert.match(host, /order: z\.array\(z\.string\(\)\)\.default\(\[\]\)\.volatile\(\)/)
+  assert.match(host, /typeof settings\.register === 'function'/)
+  assert.match(host, /settings\.register\(name, Config/)
 })
 
 test('package metadata is publishable and points at the public repository', () => {
@@ -92,7 +93,16 @@ test('the docs describe the version and the repository that ship here', () => {
     assert.ok(text.includes(pkg.name), 'the README must name the package')
     assert.ok(text.includes('jackovibe/dsh-settings-order'), 'the README must point at the public repository')
     assert.ok(text.includes('dsh plugin --profile web add'), 'the README must carry the install command')
+    assert.ok(text.includes('cordis.patch.yml'), 'the README must identify the current persistence document')
+    assert.ok(text.includes('0.1.7-rc.1'), 'the README must document the checked host API')
+    assert.match(text, /not the removed|不是已移除的/, 'the README must distinguish the old settings.yaml from current storage')
   }
   assert.match(readme, /## Verification/)
   assert.ok(!/0\.1\.0/.test(readme) || pkg.version === '0.1.0', 'the README must not advertise a stale version')
+})
+
+test('optional settings peers admit DSH 0.1.7 prereleases and stable builds', () => {
+  for (const name of ['@deepseek-ai/dsh-settings', '@deepseek-ai/dsh-client-ui-settings']) {
+    assert.match(pkg.peerDependencies[name], />=0\.1\.7-rc\.1 <0\.2\.0/)
+  }
 })
