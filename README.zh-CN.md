@@ -53,15 +53,21 @@ SettingsForms 的 schema-derived volatile `Config` API 已对照 **0.1.7-rc.1** 
 是随包发布的成品。
 
 ```powershell
+# 从 npm 安装（已发布的版本，最快的路径）
+dsh plugin --profile web add dsh-settings-order
+
+# 钉住某个版本
+dsh plugin --profile web add dsh-settings-order@0.2.5
+
 # 从 GitHub 安装（跟随 main）
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
-# 想钉住某个发布版
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.4
+# 想钉住某个 GitHub 发布版
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.5
 
 # 或从本地目录 / 打包产物安装
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.4.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.5.tgz
 ```
 
 `dsh plugin add` 会同时登记依赖**并**把它追加进 `dsh.profile.bundles`，挂载就靠这个：
@@ -80,13 +86,13 @@ dsh plugin --profile web add .\dsh-settings-order-0.2.4.tgz
 （`error: profile "desktop" is managed exclusively by the Electron application`）：
 
 ```powershell
-& "$env:LOCALAPPDATA\..\..\DSH Desktop\resources\runtime\cli\bin\dsh.cmd" `
-  plugin --profile desktop add github:jackovibe/dsh-settings-order#v0.2.4
+& "D:\DSH Desktop\resources\runtime\cli\bin\dsh.cmd" `
+  plugin --profile desktop add dsh-settings-order@0.2.5
 ```
 
-路径按你的桌面版安装位置调整（本机是 `D:\DSH Desktop\…`）。这条命令走桌面版自带的 pnpm，
-这点重要：桌面 profile 的 lockfile 归应用自己写。装完**必须重启桌面应用**——宿主半在启动时
-注册、客户端 bundle 也是启动快照下发的，重启后左列底部才会出现页脚。之后改顺序会落到
+路径按你的桌面版安装位置调整。这条命令走桌面版自带的 pnpm，这点重要：桌面 profile 的
+lockfile 归应用自己写。装完**必须重启桌面应用**——宿主半在启动时注册、客户端 bundle 也是
+启动快照下发的，重启后左列底部才会出现页脚。之后改顺序会落到
 `~/.dsh/profiles/desktop/cordis.patch.yml` 的 `settings-order.config.order`，与 Web profile 一致。
 
 ### 更新

@@ -58,15 +58,21 @@ DSH Desktop **0.2.0-rc.2** build bundles; hosts that still expose the legacy
 the client bundle ships ready to serve, so a plain `dsh plugin add` is enough.
 
 ```powershell
+# from npm (a released version; the registry is the quickest path)
+dsh plugin --profile web add dsh-settings-order
+
+# pin a released version
+dsh plugin --profile web add dsh-settings-order@0.2.5
+
 # from GitHub (tracks `main`)
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
-# pin a released version instead
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.4
+# pin a GitHub release instead
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.5
 
 # or from a local checkout / tarball
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.4.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.5.tgz
 ```
 
 `dsh plugin add` records the dependency **and** appends it to
@@ -88,17 +94,17 @@ install into **that** profile with the CLI the app ships — the npm-installed
 (`error: profile "desktop" is managed exclusively by the Electron application`):
 
 ```powershell
-& "$env:LOCALAPPDATA\..\..\DSH Desktop\resources\runtime\cli\bin\dsh.cmd" `
-  plugin --profile desktop add github:jackovibe/dsh-settings-order#v0.2.4
+& "D:\DSH Desktop\resources\runtime\cli\bin\dsh.cmd" `
+  plugin --profile desktop add dsh-settings-order@0.2.5
 ```
 
-Adjust the path to wherever the Desktop build is installed (this machine:
-`D:\DSH Desktop\…`). The command installs under the app's own pnpm, which matters
-because the Desktop profile's lockfile is the app's to write. Then **restart the
-app**: the host half registers at boot and the client bundles are served from a
-boot-time snapshot, so the footer appears only after the restart. An ordering
-change then lands in `~/.dsh/profiles/desktop/cordis.patch.yml` under
-`settings-order.config.order`, exactly as in the Web profile.
+Adjust the path to wherever the Desktop build is installed. The command installs
+under the app's own pnpm, which matters because the Desktop profile's lockfile
+is the app's to write. Then **restart the app**: the host half registers at boot
+and the client bundles are served from a boot-time snapshot, so the footer
+appears only after the restart. An ordering change then lands in
+`~/.dsh/profiles/desktop/cordis.patch.yml` under `settings-order.config.order`,
+exactly as in the Web profile.
 
 ### Update
 

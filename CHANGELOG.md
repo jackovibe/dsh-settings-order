@@ -4,6 +4,31 @@ All notable changes to `dsh-settings-order` are documented here. The format
 loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project uses semantic versioning.
 
+## [0.2.5] — 2026-10-02
+
+The package is now on the npm registry as `dsh-settings-order`, published by the
+`jackozou` account. This release makes the registry the documented first-choice
+install path.
+
+### Added
+
+- **npm distribution.** `dsh-settings-order` is published to
+  `https://registry.npmjs.org/dsh-settings-order` (0.2.4 is the first npm
+  release; 0.2.5 is the first published with the registry install documented).
+  Both READMEs now lead the install section with it:
+  `dsh plugin --profile web add dsh-settings-order` (and
+  `dsh-settings-order@0.2.5` to pin). The DSH Desktop section uses
+  `dsh-settings-order@0.2.5` too, through the app's own CLI.
+- `homepage`, `bugs` and `publishConfig.access: public` in `package.json`, so
+  the npm page links back to the GitHub repository and its issue tracker.
+
+### Changed
+
+- The Desktop install snippet uses a concrete, copy-pasteable path
+  (`D:\DSH Desktop\resources\runtime\cli\bin\dsh.cmd`) instead of a relative
+  `$env:LOCALAPPDATA\..\..\…` expression that only happened to resolve on one
+  machine.
+
 ## [0.2.4] — 2026-09-30
 
 Documentation only — no code change. Records how to install into a DSH Desktop
