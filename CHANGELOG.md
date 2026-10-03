@@ -4,6 +4,36 @@ All notable changes to `dsh-settings-order` are documented here. The format
 loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the
 project uses semantic versioning.
 
+## [0.2.6] — 2026-10-03
+
+Documentation and accuracy only — no code change. The 0.2.0 line is now exercised
+on **both** harnesses, and one earlier claim is corrected.
+
+### Fixed
+
+- **A wrong claim in the 0.2.3 entry.** It said `0.2.0-rc.2` "satisfied neither
+  settings peer" and that the widened range was needed to unblock the install.
+  That was measured with default semver. DSH's real audit
+  (`dsh-app-boot` → `evaluatePluginCompatibility`) compares only
+  `@deepseek-ai/dsh*` peers and passes `{ includePrerelease: true }`, under which
+  `0.2.0-rc.2` already satisfied `… || >=0.1.7-rc.1 <0.2.0`. So 0.2.2 was never
+  blocked on a 0.2.0 host. The widened range is still right to keep — it states
+  the support explicitly instead of leaning on prerelease comparison — but it was
+  never the difference between installing and not.
+- The READMEs now name the audit rule itself, so a future reader can check a peer
+  range the way the harness does instead of guessing from default semver.
+
+### Verified
+
+- **The Web harness at 0.2.0-rc.2**, not just the Desktop build: the `web`
+  profile was upgraded from 0.1.7-rc.1 to 0.2.0-rc.2, the plugin (0.2.2) is
+  present in the boot payload and its client bundle is served, and the startup is
+  free of `incompatible`, `failed to apply` and `register is not a function`.
+  Three unrelated plugins in that profile (`dsh-backup@0.13.1`,
+  `dsh-cost-meter@1.7.37`, `dsh-memory-vault@0.1.5`) really were blocked by
+  their own 0.1.x-only peers and needed `dsh plugin allow-version` exemptions —
+  which is what distinguishes them from this plugin.
+
 ## [0.2.5] — 2026-10-02
 
 The package is now on the npm registry as `dsh-settings-order`, published by the
@@ -65,11 +95,14 @@ checked there.
 
 ### Fixed
 
-- **The optional settings peers admit the 0.2.0 prerelease line.** The ranges
-  ended at `<0.2.0`, and a semver prerelease only matches a comparator naming its
-  own tuple — so `0.2.0-rc.2` satisfied neither `@deepseek-ai/dsh-settings` nor
-  `@deepseek-ai/dsh-client-ui-settings`, and a 0.2.0-rc host reported a peer
-  mismatch. Both now carry `|| >=0.2.0-rc.1 <0.3.0` alongside the 0.1.x lines.
+- **The optional settings peers admit the 0.2.0 line explicitly.** The ranges
+  ended at `<0.2.0`. `0.2.0-rc.2` is a prerelease, and the audit DSH actually
+  runs (`dsh-app-boot`'s `evaluatePluginCompatibility`) compares with
+  `semver.satisfies(runtime, range, { includePrerelease: true })`, so `0.2.0-rc.2`
+  did satisfy those ranges and was not blocked. The added
+  `|| >=0.2.0-rc.1 <0.3.0` is therefore not a fix for a blocked install: it
+  states the support explicitly rather than relying on prerelease comparison, and
+  it keeps the ranges correct once 0.2.0 ships stable.
 - The contract test asserts both prerelease lines, so dropping one fails loudly.
 
 ### Verified

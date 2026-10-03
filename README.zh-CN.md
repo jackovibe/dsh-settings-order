@@ -57,17 +57,17 @@ SettingsForms 的 schema-derived volatile `Config` API 已对照 **0.1.7-rc.1** 
 dsh plugin --profile web add dsh-settings-order
 
 # 钉住某个版本
-dsh plugin --profile web add dsh-settings-order@0.2.5
+dsh plugin --profile web add dsh-settings-order@0.2.6
 
 # 从 GitHub 安装（跟随 main）
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # 想钉住某个 GitHub 发布版
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.5
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.6
 
 # 或从本地目录 / 打包产物安装
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.5.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.6.tgz
 ```
 
 `dsh plugin add` 会同时登记依赖**并**把它追加进 `dsh.profile.bundles`，挂载就靠这个：
@@ -87,7 +87,7 @@ dsh plugin --profile web add .\dsh-settings-order-0.2.5.tgz
 
 ```powershell
 & "D:\DSH Desktop\resources\runtime\cli\bin\dsh.cmd" `
-  plugin --profile desktop add dsh-settings-order@0.2.5
+  plugin --profile desktop add dsh-settings-order@0.2.6
 ```
 
 路径按你的桌面版安装位置调整。这条命令走桌面版自带的 pnpm，这点重要：桌面 profile 的
@@ -199,13 +199,21 @@ dsh plugin --profile web remove dsh-settings-order
 
 ## 兼容性
 
-SettingsForms / volatile-Config API 已对照 DSH **0.1.7-rc.1** 的源码和类型，以及 DSH Desktop
-构建里 `resources/app.asar` 内 **0.2.0-rc.2** 的同一套接口（`configForms`、`set(field, value)`、
-快照状态、设置外壳标记都在）；并且已在 **DSH Desktop 0.2.0-rc.2 上端到端验证**：设置左列页脚
-正常出现，拖动后的顺序落到了 `~/.dsh/profiles/desktop/cordis.patch.yml` 的
-`settings-order.config.order`。设置外壳标记与 slot 契约另由宿主契约测试覆盖；仓库 CI 不跑
-浏览器 DOM 层的 `npm run e2e:dom`（需要 playwright-core 与配套 chromium）。找不到 DSH 安装时
-`npm test` 会跳过宿主契约部分；把 `DSH_CORE_ROOT` 指向 `@deepseek-ai` scope 目录即可校验指定构建。
+插件目标的两套 harness 都实测过：
+
+| Harness | 验证方式 | 结果 |
+| --- | --- | --- |
+| DSH Desktop **0.2.0-rc.2** | 插件自己的 profile，GUI | 页脚正常出现，拖动顺序落盘到 `~/.dsh/profiles/desktop/cordis.patch.yml` 的 `settings-order.config.order` |
+| DSH Web **0.2.0-rc.2** | `web` profile 从 0.1.7-rc.1 升上来 | 插件出现在启动载荷里、客户端 bundle 正常下发，启动无 `incompatible` / `failed to apply` / `register is not a function` |
+| DSH **0.1.7-rc.1** | 对照已安装的源码与类型核对 | 宿主侧 `SettingsForms` + volatile `Config`；浏览器侧 `configForms.get(entryId)` 带 `set`/`unset` 与 `loading \| ready \| unavailable` 快照 |
+
+设置外壳标记与 slot 契约另由宿主契约测试覆盖；仓库 CI 不跑浏览器 DOM 层的 `npm run e2e:dom`
+（需要 playwright-core 与配套 chromium）。找不到 DSH 安装时 `npm test` 会跳过宿主契约部分；
+把 `DSH_CORE_ROOT` 指向 `@deepseek-ai` scope 目录即可校验指定构建。
+
+> 关于 peer 范围：DSH 的安装审计（`dsh-app-boot` 的 `evaluatePluginCompatibility`）只检查
+> `@deepseek-ai/dsh*` 前缀的 peer，并按 `includePrerelease: true` 比对。因此判断某个版本能否装入
+> 时请用同一口径，不要用默认 semver 推断。
 
 ## 开发
 

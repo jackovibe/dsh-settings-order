@@ -62,17 +62,17 @@ the client bundle ships ready to serve, so a plain `dsh plugin add` is enough.
 dsh plugin --profile web add dsh-settings-order
 
 # pin a released version
-dsh plugin --profile web add dsh-settings-order@0.2.5
+dsh plugin --profile web add dsh-settings-order@0.2.6
 
 # from GitHub (tracks `main`)
 dsh plugin --profile web add github:jackovibe/dsh-settings-order
 
 # pin a GitHub release instead
-dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.5
+dsh plugin --profile web add github:jackovibe/dsh-settings-order#v0.2.6
 
 # or from a local checkout / tarball
 npm pack
-dsh plugin --profile web add .\dsh-settings-order-0.2.5.tgz
+dsh plugin --profile web add .\dsh-settings-order-0.2.6.tgz
 ```
 
 `dsh plugin add` records the dependency **and** appends it to
@@ -95,7 +95,7 @@ install into **that** profile with the CLI the app ships — the npm-installed
 
 ```powershell
 & "D:\DSH Desktop\resources\runtime\cli\bin\dsh.cmd" `
-  plugin --profile desktop add dsh-settings-order@0.2.5
+  plugin --profile desktop add dsh-settings-order@0.2.6
 ```
 
 Adjust the path to wherever the Desktop build is installed. The command installs
@@ -229,18 +229,25 @@ watchdog.
 
 ## Compatibility
 
-The SettingsForms/volatile-Config API was checked against DSH **0.1.7-rc.1**
-source and types, and against the 0.2.0-rc.2 payload inside the DSH Desktop build
-(`resources/app.asar`), where the same `configForms` service, `set(field, value)`,
-snapshot statuses and Settings-shell markup are present. It was then verified
-**end to end on DSH Desktop 0.2.0-rc.2**: the navigation footer renders, and a
-reorder is persisted into `~/.dsh/profiles/desktop/cordis.patch.yml` under
-`settings-order.config.order`. The Settings-shell markup and slot contract are
-also covered by the installed-host contract test. The browser-DOM layer's own
+Verified on both harnesses the plugin targets:
+
+| Harness | How it was exercised | Result |
+| --- | --- | --- |
+| DSH Desktop **0.2.0-rc.2** | the plugin's own profile, GUI | footer renders; a reorder is persisted into `~/.dsh/profiles/desktop/cordis.patch.yml` under `settings-order.config.order` |
+| DSH Web **0.2.0-rc.2** | the `web` profile upgraded from 0.1.7-rc.1 | plugin present in the boot payload, client bundle served, no `incompatible` / `failed to apply` / `register is not a function` at startup |
+| DSH **0.1.7-rc.1** | the API read from the installed source and types | `SettingsForms` + volatile `Config` on the host side, `configForms.get(entryId)` with `set`/`unset` and `loading \| ready \| unavailable` on the browser side |
+
+The Settings-shell markup and slot contract are also covered by the
+installed-host contract test. The browser-DOM layer's own
 `npm run e2e:dom` harness is not run in this repository's CI (it needs
 playwright-core and a matching chromium). `npm test` skips the host contract
 block when no DSH install is found; point `DSH_CORE_ROOT` at the
 `@deepseek-ai` scope directory to check a specific build.
+
+> On peer ranges: DSH's install audit (`dsh-app-boot`'s
+> `evaluatePluginCompatibility`) inspects only `@deepseek-ai/dsh*` peers and
+> compares with `includePrerelease: true`. Use that same rule when judging
+> whether a version installs, rather than inferring it from default semver.
 
 ## Development
 
